@@ -55,7 +55,7 @@ $logDestination = [System.IO.Path]::Combine($PSScriptRoot, "Logs", "$timestamp.l
 # 检查游戏路径是否有效
 if (-not (Test-Path $GamePath -PathType Container))
 {
-    Write-Error "Game path invalid or not a directory: $GamePath"
+    Write-Error "游戏路径无效或不是目录: $GamePath"
     exit 1
 }
 
@@ -84,11 +84,11 @@ function Copy-BepInExLog
         try
         {
             Copy-Item $GameLog $logDestination -Force
-            Write-ColoredMessage "Copying BepInEx logs to ""$logDestination""." Cyan
+            Write-ColoredMessage "正在复制 BepInEx 日志到 ""$logDestination""。" Cyan
         }
         catch
         {
-            Write-Warning "Failed to copy BepInEx logs: $_"
+            Write-Warning "复制 BepInEx 日志失败: $_"
         }
     }
 }
@@ -103,14 +103,14 @@ function Interval
 if (Test-Path $GameLog)
 {
     Clear-Content $GameLog
-    Write-ColoredMessage "Cleared previous Game logs." Cyan
+    Write-ColoredMessage "已清空之前的日志文件。" Cyan
 }
 
 # 输出启动信息
-Write-ColoredMessage "Game path: $GamePath" Yellow
-Write-ColoredMessage "Mod namespace: $ModNamespace" Yellow
-Write-ColoredMessage "Mod name: $ModName" Yellow
-Write-ColoredMessage "Target folder: $targetModFolder" Yellow
+Write-ColoredMessage "游戏路径: $GamePath" Yellow
+Write-ColoredMessage "模组命名空间: $ModNamespace" Yellow
+Write-ColoredMessage "模组名称: $ModName" Yellow
+Write-ColoredMessage "目标文件夹: $targetModFolder" Yellow
 
 # 复制dll文件到游戏目录 - 统一使用 ModName 文件夹
 try
@@ -118,11 +118,11 @@ try
     $pluginPath = [System.IO.Path]::Combine($bepInExPath, "plugins", $targetModFolder)
     New-Item -ItemType Directory -Path $pluginPath -Force
     Copy-Item $ModDll ([System.IO.Path]::Combine($pluginPath, "$ModNamespace.dll")) -Force
-    Write-ColoredMessage "Copying Mod dll file to ""$pluginPath\$ModNamespace.dll""." Cyan
+    Write-ColoredMessage "正在复制模组 DLL 到 ""$pluginPath\$ModNamespace.dll""。" Cyan
 }
 catch
 {
-    Write-Error "Failed to copy Mod dll file: $_"
+    Write-Error "复制模组 DLL 失败: $_"
     exit 1
 }
 
@@ -140,23 +140,23 @@ try
         if (Test-Path $sourceDocPath -PathType Leaf)
         {
             Copy-Item $sourceDocPath $destDocFilePath -Force
-            Write-ColoredMessage "Copying document file ""$docFile"" to ""$destDocFilePath""." Cyan
+            Write-ColoredMessage "正在复制文档文件 ""$docFile"" 到 ""$destDocFilePath""。" Cyan
             $copiedDocs++
         }
         else
         {
-            Write-ColoredMessage "Document file ""$docFile"" not found, skipping." Yellow
+            Write-ColoredMessage "文档文件 ""$docFile"" 不存在，跳过。" Yellow
         }
     }
 
     if ($copiedDocs -gt 0)
     {
-        Write-ColoredMessage "Successfully copied $copiedDocs document file(s) to plugin directory." Green
+        Write-ColoredMessage "已成功复制 $copiedDocs 个文档文件到插件目录。" Green
     }
 }
 catch
 {
-    Write-Warning "Failed to copy document files: $_"
+    Write-Warning "复制文档文件失败: $_"
 }
 
 # 启动游戏进程并重定向输出
@@ -166,7 +166,7 @@ try
         -WorkingDirectory (Split-Path $GameExecutable -Parent) `
         -PassThru -NoNewWindow
 
-    Write-ColoredMessage "Game process started, PID: $( $gameProcess.Id )" Yellow
+    Write-ColoredMessage "游戏进程已启动, PID: $( $gameProcess.Id )" Yellow
     Interval
 
     # 定期轮询日志
@@ -186,12 +186,12 @@ try
 
     # 等待游戏进程退出
     Interval
-    Write-ColoredMessage "Game process exited." Red
+    Write-ColoredMessage "游戏进程已退出。" Red
 }
 
 catch
 {
-    Write-Error "Failed to start the game process: $_"
+    Write-Error "启动游戏进程失败: $_"
     exit 1
 }
 
@@ -201,7 +201,7 @@ finally
     if ($gameProcess -and !$gameProcess.HasExited)
     {
         Interval
-        Write-ColoredMessage "Terminating game process..." Red
+        Write-ColoredMessage "正在终止游戏进程..." Red
         $gameProcess.Kill()
     }
     Copy-BepInExLog
