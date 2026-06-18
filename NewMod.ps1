@@ -303,6 +303,32 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # ============================================================
+# 清理模板 Git 并初始化新仓库
+# ============================================================
+
+$projectPath = Resolve-Path $OutputDir
+
+# 删除从模板继承的 .git 目录（如果存在）
+$oldGitDir = Join-Path $projectPath ".git"
+if (Test-Path $oldGitDir) {
+    Write-Host "清理模板 Git 仓库..." -ForegroundColor Cyan
+    Remove-Item -Recurse -Force $oldGitDir
+}
+
+# 初始化新的 Git 仓库
+Write-Host "初始化新 Git 仓库..." -ForegroundColor Cyan
+Push-Location $projectPath
+try {
+    git init | Out-Null
+    git add . | Out-Null
+    git commit -m "Initial commit: $ModDisplayName mod" | Out-Null
+    Write-Host "  Git 仓库已初始化并完成首次提交。" -ForegroundColor Green
+} catch {
+    Write-Warning "Git 初始化失败: $_"
+}
+Pop-Location
+
+# ============================================================
 # 完成
 # ============================================================
 

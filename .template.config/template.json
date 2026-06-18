@@ -60,9 +60,11 @@
         {
           "exclude": [
             ".template.config/**",
+            ".git/**",
             ".run/**",
             "obj/**",
             "bin/**",
+            "*.DotSettings",
             "*.DotSettings.user"
           ]
         }
