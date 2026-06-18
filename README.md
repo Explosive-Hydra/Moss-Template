@@ -1,6 +1,7 @@
 # Moss-Template
 
-一个用于开发 `Casualties Unknown` 模组的 [dotnet new](https://learn.microsoft.com/zh-cn/dotnet/core/tools/dotnet-new) 模板。
+一个用于开发 `Casualties Unknown` 模组的 [dotnet new](https://learn.microsoft.com/zh-cn/dotnet/core/tools/dotnet-new)
+模板。
 
 基于 [05126619z/ScavTemplate](https://github.com/05126619z/ScavTemplate)。
 
@@ -26,6 +27,7 @@ cd E:/Projects  # 你想创建项目的目录
 ```
 
 脚本会自动：
+
 - 搜索 Steam 安装路径中的 Casualties Unknown 游戏目录
 - 交互式提示输入模组名称、GUID、版本等信息
 - 调用 `dotnet new mosstemplate` 生成项目
@@ -61,16 +63,17 @@ dotnet new mosstemplate -n MyCoolMod `
 
 ## 模板参数说明
 
-| 参数 | 说明 | 默认值 |
-|------|------|--------|
-| `-n` / `--name` | 项目名称（PascalCase，如 `MyCoolMod`） | 必填 |
-| `--ModDisplayName` | 模组显示名称（如 `My Cool Mod`） | 从名称自动生成 |
-| `--ModGuid` | 模组唯一标识（格式 `yourname.modname`） | `com.example.mymod` |
-| `--ModVersion` | 初始版本号 | `1.0.0` |
-| `--AuthorName` | 作者名称（用于 LICENSE） | `Your Name` |
-| `--GameManagedDir` | 游戏 Managed 目录路径 | Steam 默认路径 |
+| 参数                 | 说明                             | 默认值                 |
+|--------------------|--------------------------------|---------------------|
+| `-n` / `--name`    | 项目名称（PascalCase，如 `MyCoolMod`） | 必填                  |
+| `--ModDisplayName` | 模组显示名称（如 `My Cool Mod`）        | 从名称自动生成             |
+| `--ModGuid`        | 模组唯一标识（格式 `yourname.modname`）  | `com.example.mymod` |
+| `--ModVersion`     | 初始版本号                          | `1.0.0`             |
+| `--AuthorName`     | 作者名称（用于 LICENSE）               | `Your Name`         |
+| `--GameManagedDir` | 游戏 Managed 目录路径                | Steam 默认路径          |
 
 模板会自动替换以下内容：
+
 - `MossTemplate.csproj` → `{项目名}.csproj`
 - `namespace MossTemplate` → `namespace {项目名}`
 - `org.explosivehydra.mosstemplate` → `{ModGuid}`
@@ -84,10 +87,12 @@ dotnet new mosstemplate -n MyCoolMod `
 [StartGame.ps1](StartGame.ps1) 会将编译好的 DLL 文件复制到游戏目录下的 BepInEx 插件目录，并自动启动游戏。
 
 **参数：**
+
 - `$GamePath` — 游戏安装目录（如 `E:/SteamLibrary/steamapps/common/Casualties Unknown Demo`）
 - `$ModNamespace` — 模组命名空间（如 `MyCoolMod`）
 
 **命令行运行：**
+
 ```powershell
 .\StartGame.ps1 -GamePath "E:/SteamLibrary/steamapps/common/Casualties Unknown Demo" -ModNamespace "MyCoolMod"
 ```
