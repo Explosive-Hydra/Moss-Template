@@ -3,6 +3,7 @@
 /bin/
 *.DotSettings.user
 *.DotSettings
+Directory.Build.props
 .run/
 .idea/
 .vs/

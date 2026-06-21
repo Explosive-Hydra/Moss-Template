@@ -4,7 +4,7 @@
 
 .DESCRIPTION
     使用 dotnet new mosstemplate 模板生成新模组项目，并自动配置所有参数。
-    自动检测 Steam 安装路径中的游戏 Managed 目录。
+    自动检测 Steam 安装路径中的游戏目录。
 
 .PARAMETER ModName
     模组的 PascalCase 命名空间名称（如 "MyCoolMod"），将作为项目名和命名空间。
@@ -23,8 +23,8 @@
 .PARAMETER AuthorName
     作者名称，用于 LICENSE 文件。
 
-.PARAMETER GameManagedDir
-    游戏 Managed 目录的完整路径。如果不指定，将自动从 Steam 常见安装路径中检测。
+.PARAMETER GameRootPath
+    游戏根目录的完整路径。如果不指定，将自动从 Steam 常见安装路径中检测。
 
 .PARAMETER OutputDir
     项目输出目录。如果不指定，则使用当前目录下与 ModName 同名的子目录。
@@ -46,7 +46,7 @@ param(
     [string]$ModGuid,
     [string]$ModVersion,
     [string]$AuthorName,
-    [string]$GameManagedDir,
+    [string]$GameRootPath,
     [string]$OutputDir
 )
 
@@ -190,25 +190,28 @@ if ([string]::IsNullOrWhiteSpace($AuthorName)) {
     $AuthorName = Read-Input -Prompt "输入作者名称 (用于 LICENSE)" -DefaultValue "Your Name"
 }
 
-if ([string]::IsNullOrWhiteSpace($GameManagedDir)) {
+# GameRootPath - 自动检测
+if ([string]::IsNullOrWhiteSpace($GameRootPath)) {
     Write-Host ""
     Write-Host "正在搜索 Casualties Unknown 游戏路径..." -ForegroundColor Cyan
 
-    $detectedPath = Find-GameManagedDir
+    $detectedManagedPath = Find-GameManagedDir
 
-    if ($detectedPath) {
-        Write-Host "  已找到游戏目录: $detectedPath" -ForegroundColor Green
-        $GameManagedDir = Read-Input -Prompt "输入游戏 Managed 目录路径" -DefaultValue $detectedPath
+    if ($detectedManagedPath) {
+        $detectedRoot = (Resolve-Path (Join-Path $detectedManagedPath "..\..")).Path
+        $detectedRoot = $detectedRoot.Replace('\', '/')
+        Write-Host "  已找到游戏目录: $detectedRoot" -ForegroundColor Green
+        $GameRootPath = Read-Input -Prompt "输入游戏根目录路径" -DefaultValue $detectedRoot
     } else {
         Write-Host "  未自动找到游戏目录，请手动输入。" -ForegroundColor Yellow
-        $GameManagedDir = Read-Input -Prompt "输入游戏 Managed 目录路径" -Required
+        $GameRootPath = Read-Input -Prompt "输入游戏根目录路径 (如 E:/SteamLibrary/steamapps/common/Casualties Unknown Demo)" -Required
     }
 }
 
-$normalizedGameDir = $GameManagedDir.Replace('\', '/')
-if (-not (Test-Path $normalizedGameDir -PathType Container)) {
-    Write-Warning "游戏目录不存在: $GameManagedDir"
-    Write-Warning "项目将被创建，但你需要手动修改 csproj 中的 DLL 引用路径。"
+$GameRootPath = $GameRootPath.Replace('\', '/')
+if (-not (Test-Path $GameRootPath -PathType Container)) {
+    Write-Warning "游戏目录不存在: $GameRootPath"
+    Write-Warning "项目将被创建，但你需要手动修改 Directory.Build.props 中的游戏路径。"
 }
 
 if ([string]::IsNullOrWhiteSpace($OutputDir)) {
@@ -227,7 +230,7 @@ Write-Host "  显示名称:        $ModDisplayName" -ForegroundColor White
 Write-Host "  GUID:            $ModGuid" -ForegroundColor White
 Write-Host "  版本号:          $ModVersion" -ForegroundColor White
 Write-Host "  作者:            $AuthorName" -ForegroundColor White
-Write-Host "  游戏目录:        $GameManagedDir" -ForegroundColor White
+Write-Host "  游戏根目录:      $GameRootPath" -ForegroundColor White
 Write-Host "  输出目录:        $OutputDir" -ForegroundColor White
 Write-Host "----------------------------------------" -ForegroundColor Yellow
 Write-Host ""
@@ -245,12 +248,6 @@ if ($confirm -eq 'n' -or $confirm -eq 'N') {
 Write-Host ""
 Write-Host "正在创建项目..." -ForegroundColor Cyan
 
-$GameManagedDirNormalized = $GameManagedDir.Replace('\', '/')
-
-# 推导游戏根路径（向上两级目录）
-$gameRootDir = (Resolve-Path (Join-Path $normalizedGameDir "..\..")).Path
-$GameRootPath = $gameRootDir.Replace('\', '/')
-
 $dotnetArgs = @(
     "new", "mosstemplate",
     "-n", $ModName,
@@ -258,7 +255,6 @@ $dotnetArgs = @(
     "--ModGuid", $ModGuid,
     "--ModVersion", $ModVersion,
     "--AuthorName", $AuthorName,
-    "--GameManagedDir", $GameManagedDirNormalized,
     "--GameRootPath", $GameRootPath,
     "--ModNamespace", $ModName,
     "-o", $OutputDir
@@ -278,10 +274,22 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # ============================================================
-# 清理模板 Git 并初始化新仓库
+# 复制 Directory.Build.props.example 为 Directory.Build.props
 # ============================================================
 
 $projectPath = Resolve-Path $OutputDir
+
+$propsExamplePath = Join-Path $projectPath "Directory.Build.props.example"
+$propsPath = Join-Path $projectPath "Directory.Build.props"
+
+if (Test-Path $propsExamplePath) {
+    Copy-Item $propsExamplePath $propsPath -Force
+    Write-Host "已创建: Directory.Build.props" -ForegroundColor Green
+}
+
+# ============================================================
+# 清理模板 Git 并初始化新仓库
+# ============================================================
 
 $oldGitDir = Join-Path $projectPath ".git"
 if (Test-Path $oldGitDir) {
@@ -306,9 +314,6 @@ Pop-Location
 # ============================================================
 
 Write-Host "生成 Rider 运行配置..." -ForegroundColor Cyan
-
-$gameRootPath = (Resolve-Path (Join-Path $normalizedGameDir "..\..")).Path
-$gameRootPath = $gameRootPath.Replace('\', '/')
 
 $runDir = Join-Path $projectPath ".run"
 if (-not (Test-Path $runDir)) {
@@ -341,6 +346,7 @@ Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "下一步:" -ForegroundColor Yellow
 Write-Host "  1. cd $OutputDir" -ForegroundColor White
-Write-Host "  2. dotnet build  (验证编译)" -ForegroundColor White
-Write-Host "  3. 右键 StartGame.ps1 运行测试" -ForegroundColor White
+Write-Host "  2. 编辑 Directory.Build.props 填写游戏路径" -ForegroundColor White
+Write-Host "  3. dotnet build  (验证编译)" -ForegroundColor White
+Write-Host "  4. 右键 StartGame.ps1 运行测试" -ForegroundColor White
 Write-Host ""

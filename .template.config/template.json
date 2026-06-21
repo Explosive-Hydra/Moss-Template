@@ -47,15 +47,9 @@
       "replaces": "A mod for Casualties Unknown.",
       "defaultValue": "A mod for Casualties Unknown."
     },
-    "GameManagedDir": {
-      "type": "parameter",
-      "description": "Path to the game's Managed directory (e.g. 'E:/SteamLibrary/steamapps/common/Casualties Unknown Demo/CasualtiesUnknown_Data/Managed')",
-      "replaces": "__GAME_MANAGED_DIR__",
-      "defaultValue": "C:/Program Files (x86)/Steam/steamapps/common/Casualties Unknown Demo/CasualtiesUnknown_Data/Managed"
-    },
     "GameRootPath": {
       "type": "parameter",
-      "description": "Path to the game root directory for StartGame.ps1 default parameter",
+      "description": "Path to the game root directory (e.g. 'E:/SteamLibrary/steamapps/common/Casualties Unknown Demo')",
       "replaces": "__GAME_ROOT_PATH__",
       "defaultValue": "C:/Program Files (x86)/Steam/steamapps/common/Casualties Unknown Demo"
     },
