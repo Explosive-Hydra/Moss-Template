@@ -47,6 +47,7 @@ param(
     [string]$ModVersion,
     [string]$AuthorName,
     [string]$GameRootPath,
+    [string]$LicenseType,
     [string]$OutputDir
 )
 
@@ -190,6 +191,20 @@ if ([string]::IsNullOrWhiteSpace($AuthorName)) {
     $AuthorName = Read-Input -Prompt "输入作者名称 (用于 LICENSE)" -DefaultValue "Your Name"
 }
 
+# LicenseType - 许可证选择
+if ([string]::IsNullOrWhiteSpace($LicenseType)) {
+    Write-Host ""
+    Write-Host "选择许可证:" -ForegroundColor Yellow
+    Write-Host "  1. MIT (宽松，推荐大多数情况)" -ForegroundColor White
+    Write-Host "  2. GPL v3 (要求衍生作品也开源，参考 Custom-Fungame-Pack)" -ForegroundColor White
+    $choice = Read-Host "输入选择 (1 或 2, 默认: 1)"
+    if ($choice -eq "2") {
+        $LicenseType = "GPL-3.0"
+    } else {
+        $LicenseType = "MIT"
+    }
+}
+
 # GameRootPath - 自动检测
 if ([string]::IsNullOrWhiteSpace($GameRootPath)) {
     Write-Host ""
@@ -272,6 +287,55 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "  dotnet new install <Moss-Template 项目路径>" -ForegroundColor Yellow
     exit $LASTEXITCODE
 }
+
+# ============================================================
+# 处理 LICENSE 文件
+# ============================================================
+
+$licensePath = Join-Path $projectPath "LICENSE.md"
+
+if ($LicenseType -eq "GPL-3.0") {
+    $year = (Get-Date).Year
+    $gpl3Content = @"
+                    GNU GENERAL PUBLIC LICENSE
+                       Version 3, 29 June 2007
+
+Copyright (C) $year $AuthorName
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"@
+    [System.IO.File]::WriteAllText($licensePath, $gpl3Content, [System.Text.UTF8Encoding]::new($true))
+    Write-Host "已使用 GPL v3 许可证: LICENSE.md" -ForegroundColor Green
+} else {
+    # MIT 许可证 (模板默认值，无需修改)
+    Write-Host "已使用 MIT 许可证: LICENSE.md" -ForegroundColor Green
+}
+
+Write-Host "  许可证类型: $LicenseType" -ForegroundColor Yellow
 
 # ============================================================
 # 复制 Directory.Build.props.example 为 Directory.Build.props
