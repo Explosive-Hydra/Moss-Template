@@ -1,6 +1,7 @@
 /logs/
 /obj/
 /bin/
+/Releases/
 *.DotSettings.user
 *.DotSettings
 Directory.Build.props

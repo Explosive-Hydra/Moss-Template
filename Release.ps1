@@ -100,8 +100,13 @@ if (-not [string]::IsNullOrWhiteSpace($userVersion)) {
 }
 Write-OK "版本号:     $ModVersion"
 
+$releasesDir = Join-Path $scriptDir "Releases"
+if (-not (Test-Path $releasesDir)) {
+    New-Item -ItemType Directory -Path $releasesDir -Force | Out-Null
+}
+
 $zipName = "$ModDisplayName-v$ModVersion.zip"
-$zipPath = Join-Path $scriptDir $zipName
+$zipPath = Join-Path $releasesDir $zipName
 
 # ============================================================
 # 2. 构建项目
