@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     构建模组并发布到 NexusMods 和/或 GitHub Release。
 
