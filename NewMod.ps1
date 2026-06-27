@@ -289,6 +289,20 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # ============================================================
+# 替换 Release.ps1 中的占位符
+# ============================================================
+
+$releasePs1Path = Join-Path $projectPath "Release.ps1"
+if (Test-Path $releasePs1Path) {
+    $releaseContent = [System.IO.File]::ReadAllText($releasePs1Path, [System.Text.Encoding]::UTF8)
+    $releaseContent = $releaseContent.Replace("__MOD_NAMESPACE__", $ModName)
+    $releaseContent = $releaseContent.Replace("__MOD_DISPLAY_NAME__", $ModDisplayName)
+    $releaseContent = $releaseContent.Replace("__MOD_VERSION__", $ModVersion)
+    [System.IO.File]::WriteAllText($releasePs1Path, $releaseContent, [System.Text.UTF8Encoding]::new($true))
+    Write-Host "已填入 Release.ps1 模组信息" -ForegroundColor Green
+}
+
+# ============================================================
 # 处理 LICENSE 文件
 # ============================================================
 

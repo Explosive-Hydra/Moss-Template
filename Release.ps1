@@ -44,6 +44,9 @@
     GitHub Release 需要安装 gh CLI: winget install GitHub.cli
 #>
 param(
+    [string]$ModNamespace = "__MOD_NAMESPACE__",
+    [string]$ModDisplayName = "__MOD_DISPLAY_NAME__",
+    [string]$ModVersion = "__MOD_VERSION__",
     [string]$Configuration = "Release",
     [string]$NexusApiKey = $env:NEXUS_API_KEY,
     [string]$GamePath,
@@ -86,55 +89,15 @@ function Write-Fail {
 }
 
 # ============================================================
-# 1. 从 Plugin.cs 解析模组信息
+# 1. 模组信息（NewMod.ps1 已自动填入）
 # ============================================================
 
-Write-Step "解析模组信息..." "Yellow"
+Write-Step "模组信息:" "Yellow"
+Write-OK "命名空间:   $ModNamespace"
+Write-OK "显示名称:   $ModDisplayName"
+Write-OK "版本号:     $ModVersion"
 
-$pluginCsPath = Join-Path $scriptDir "Plugin.cs"
-if (-not (Test-Path $pluginCsPath)) {
-    Write-Error "未找到 Plugin.cs"
-    exit 1
-}
-
-$pluginContent = Get-Content $pluginCsPath -Raw
-
-# 解析 Name
-if ($pluginContent -match 'public\s+const\s+string\s+Name\s*=\s*"([^"]+)"') {
-    $ModName = $Matches[1]
-    Write-OK "模组名称: $ModName"
-} else {
-    Write-Error "无法从 Plugin.cs 解析 Name"
-    exit 1
-}
-
-# 解析 Version
-if ($pluginContent -match 'public\s+const\s+string\s+Version\s*=\s*"([^"]+)"') {
-    $ModVersion = $Matches[1]
-    Write-OK "版本号:   $ModVersion"
-} else {
-    Write-Error "无法从 Plugin.cs 解析 Version"
-    exit 1
-}
-
-# 解析 GUID (命名空间格式)
-if ($pluginContent -match 'public\s+const\s+string\s+Guid\s*=\s*"([^"]+)"') {
-    $ModGuid = $Matches[1]
-    Write-OK "GUID:     $ModGuid"
-}
-
-# 从 GUID 推导命名空间（去掉组织前缀）
-# 例如 "org.explosivehydra.mosstemplate" -> "MossTemplate"
-# 更可靠的方式：从 csproj 或命名空间行获取
-if ($pluginContent -match 'namespace\s+(\w+)\s*;') {
-    $ModNamespace = $Matches[1]
-    Write-OK "命名空间: $ModNamespace"
-} else {
-    $ModNamespace = [System.IO.Path]::GetFileNameWithoutExtension((Get-ChildItem $scriptDir -Filter "*.csproj" | Select-Object -First 1).Name)
-    Write-OK "命名空间 (从 csproj): $ModNamespace"
-}
-
-$zipName = "$ModName-v$ModVersion.zip"
+$zipName = "$ModDisplayName-v$ModVersion.zip"
 $zipPath = Join-Path $scriptDir $zipName
 
 # ============================================================
@@ -190,7 +153,7 @@ foreach ($doc in $docFiles) {
 
 # 如果指定了 GamePath，也收集部署目录下的额外文件
 if ($GamePath -and (Test-Path $GamePath)) {
-    $deployedDir = Join-Path $GamePath "BepInEx/plugins/$ModName"
+    $deployedDir = Join-Path $GamePath "BepInEx/plugins/$ModDisplayName"
     if (Test-Path $deployedDir) {
         $extraFiles = Get-ChildItem $deployedDir -File | Where-Object { $_.Extension -ne ".dll" }
         foreach ($f in $extraFiles) {
