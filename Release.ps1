@@ -80,6 +80,47 @@ function Write-Fail {
     Write-Host "    FAIL: $Message" -ForegroundColor Red
 }
 
+function Convert-MarkdownToNexusBBCode {
+    <# 将 Markdown 转换为 NexusMods BBCode 格式 #>
+    param([string]$Markdown)
+    
+    $result = $Markdown
+    
+    # 标题 ## → [size=4][b][/b][/size], # → [size=5][b][/b][/size]
+    $result = $result -replace '(?m)^###\s+(.+)$', '[size=3][b]$1[/b][/size]'
+    $result = $result -replace '(?m)^##\s+(.+)$', '[size=4][b]$1[/b][/size]'
+    $result = $result -replace '(?m)^#\s+(.+)$', '[size=5][b]$1[/b][/size]'
+    
+    # **粗体**
+    $result = $result -replace '\*\*(.+?)\*\*', '[b]$1[/b]'
+    
+    # *斜体*
+    $result = $result -replace '(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)', '[i]$1[/i]'
+    
+    # ~~删除线~~
+    $result = $result -replace '~~(.+?)~~', '[s]$1[/s]'
+    
+    # `代码`
+    $result = $result -replace '`([^`]+)`', '[code]$1[/code]'
+    
+    # [文本](URL) → [url=URL]文本[/url]
+    $result = $result -replace '\[([^\]]+)\]\(([^)]+)\)', '[url=$2]$1[/url]'
+    
+    # - 无序列表
+    $result = $result -replace '(?m)^-\s+(.+)$', '[*]$1[/*]'
+    
+    # 1. 有序列表
+    $result = $result -replace '(?m)^\d+\.\s+(.+)$', '[*]$1[/*]'
+    
+    # > 引用
+    $result = $result -replace '(?m)^>\s?(.+)$', '[quote]$1[/quote]'
+    
+    # --- 分隔线
+    $result = $result -replace '(?m)^---\s*$', '[line]'
+    
+    return $result
+}
+
 # ============================================================
 # 1. 模组信息（NewMod.ps1 已自动填入）
 # ============================================================
@@ -169,6 +210,12 @@ if ([string]::IsNullOrWhiteSpace($ReleaseNotes)) {
             $ReleaseNotes = ($changelogContent -split "`n" | Select-Object -First 20) -join "`n"
             Write-OK "从 CHANGELOG.md 读取发布说明 (前 20 行)"
         }
+    }
+    
+    # 转换为 NexusMods BBCode 格式
+    if ($ReleaseNotes) {
+        $NexusDescription = Convert-MarkdownToNexusBBCode -Markdown $ReleaseNotes
+        Write-OK "已生成 NexusMods BBCode 发布说明"
     }
 }
 
