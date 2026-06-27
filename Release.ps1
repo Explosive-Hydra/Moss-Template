@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     构建模组并发布到 NexusMods 和/或 GitHub Release。
 
@@ -63,10 +63,7 @@ $scriptDir = $PSScriptRoot
 # ============================================================
 # 编码设置
 # ============================================================
-$OutputEncoding = [System.Text.Encoding]::UTF8
-[Console]::InputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-chcp 65001 > $null
 
 # ============================================================
 # 辅助函数
@@ -95,6 +92,12 @@ function Write-Fail {
 Write-Step "模组信息:" "Yellow"
 Write-OK "命名空间:   $ModNamespace"
 Write-OK "显示名称:   $ModDisplayName"
+
+# 询问版本号（读自 Plugin.cs 作为默认值）
+$userVersion = Read-Host "输入版本号 (默认: $ModVersion)"
+if (-not [string]::IsNullOrWhiteSpace($userVersion)) {
+    $ModVersion = $userVersion
+}
 Write-OK "版本号:     $ModVersion"
 
 $zipName = "$ModDisplayName-v$ModVersion.zip"
